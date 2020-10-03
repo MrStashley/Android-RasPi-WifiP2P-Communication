@@ -39,12 +39,15 @@ ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 driver_param=p2p_device=6
 update_config=1
 device_name=$device_name
-device_type=6-0050F204-1 #specifies that the device is Network Infrastructure / AP
-p2p_go_ht40=1 #supports 802.11n for the p2p group owner
-p2p_go_intent=$p2p_go_intent
+#specifies that the device is Network Infrastructure / AP
+device_type=6-0050F204-1
+#supports 802.11n for the p2p group owner
+p2p_go_ht40=1
 #0 => not group owner, 7 => 50% chance, 15 => definitely group owner 
+p2p_go_intent=$p2p_go_intent
 country=$country
-config_methods=virtual_push_button #specifies push button connection
+#specifies push button connection
+config_methods=virtual_push_button
 EOF
 
 #enable wpa_supplicant
