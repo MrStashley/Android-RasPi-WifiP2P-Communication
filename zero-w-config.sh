@@ -2,7 +2,6 @@
 #warning, this will mess up any network configuration that you may already have
 # you can create a normal wifi connection with systemd-networkd, but if you need the features of
 # normal raspbian networking services, do not use this
-sudo -Es
 
 #vars, change them as necessary
 country="US"
