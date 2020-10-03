@@ -14,7 +14,8 @@ echo "Setting up wifi direct capabilities"
 echo "This will restart your system at the end of the setup"
 echo "use control-c to stop execution if you need to"
 
-#install tools needed
+#install tools
+#these aren't necessary, you can get rid of these 3 lines if you want
 sudo apt install nmap
 sudo apt install screen
 sudo apt install emacs
