@@ -58,7 +58,7 @@ systemctl enable wpa_supplicant@wlan0.service
 rfkill unblock wlan
 
 #setup dhcp server so the pi can be group owner
-cat > /etc/systemd/networkd/12-p2p-wlan0.network <<EOF
+cat > /etc/systemd/network/12-p2p-wlan0.network <<EOF
 [Match]
 name=p2p-wlan0-*
 [Network]
