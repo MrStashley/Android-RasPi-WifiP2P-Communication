@@ -14,16 +14,21 @@ echo "Setting up wifi direct capabilities"
 echo "This will restart your system at the end of the setup"
 echo "use control-c to stop execution if you need to"
 
+#install tools needed
+sudo apt install nmap
+sudo apt install screen
+sudo apt install emacs
+
 #deinstall classic networking
-apt --autoremove purge ifupdown dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog
-apt-mark hold ifupdown dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog raspberrypi-net-mods openresolv
-rm -r /etc/network /etc/dhcp
+apt --autoremove purge ifupdown dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog;
+apt-mark hold ifupdown dhcpcd5 isc-dhcp-client isc-dhcp-common rsyslog raspberrypi-net-mods openresolv;
+rm -r /etc/network /etc/dhcp;
 
 # setup/enable systemd-resolved and systemd-networkd
 apt --autoremove purge avahi-daemon
 apt-mark hold avahi-daemon libnss-mdns
 apt install libnss-resolve
-ln -sf /run/systemd/resolve/stub-resolv.conf
+ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 systemctl enable systemd-networkd.service systemd-resolved.service
 
 #setup wifi direct
