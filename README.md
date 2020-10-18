@@ -6,4 +6,5 @@ links:
 https://raspberrypi.stackexchange.com/questions/117150/issue-connecting-raspberry-pi-to-android-via-wifi-p2p
 https://raspberrypi.stackexchange.com/questions/117718/how-to-connect-an-android-phone-and-a-raspberry-pi-through-wifi-direct-programma
 
+
 Special thanks to Stack Overflow user Ingo for providing a lot of the information used to get this working
