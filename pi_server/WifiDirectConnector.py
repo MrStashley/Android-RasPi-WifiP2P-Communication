@@ -34,9 +34,9 @@ class WifiDirectConnector:
         while True:
             data = serialConn.readline()[:-2] #reads a line; the last byte is a newline character and we don't need it
             if data:
-                if(data[0] == '_'):
-                    command_code = ord(data[1]);
-                    print("Command registered: " + str(command_code));
+                if(data[0] == ord('_')):
+                    command_code = data[1];
+                    print("Command registered: " + chr(command_code));
                     value = data[3:];
                     
                     if(command_code == DEVICE_NAME):
@@ -78,6 +78,7 @@ class WifiDirectConnector:
         self.device_name = "";
       
     def set_device_name(self, pdevice_name):
+        pdevice_name = str(pdevice_name)[2:-1];
         print("Setting device name: " + str(pdevice_name));
         self.device_name = pdevice_name;
 
