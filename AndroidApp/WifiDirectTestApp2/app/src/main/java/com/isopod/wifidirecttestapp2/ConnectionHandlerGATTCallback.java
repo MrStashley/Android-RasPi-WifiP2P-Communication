@@ -24,9 +24,13 @@ public class ConnectionHandlerGATTCallback extends BluetoothGattCallback {
     private MainActivity mainActivity;
     private ConnectionBLEHandler connectionBLEHandler;
 
+    private boolean connected;
+
     public ConnectionHandlerGATTCallback(MainActivity mainActivity, ConnectionBLEHandler connectionBLEHandler){
         this.connectionBLEHandler = connectionBLEHandler;
         this.mainActivity = mainActivity;
+
+        connected = false;
     }
 
     @Override
@@ -34,6 +38,7 @@ public class ConnectionHandlerGATTCallback extends BluetoothGattCallback {
         super.onConnectionStateChange(gatt, status, newState);
         if(newState == BluetoothProfile.STATE_CONNECTED) {
             // there was a successful connection
+            connected = true;
             mainActivity.addTextToScreen("Connected. discovering services");
             gatt.discoverServices(); // start service discovery
 
@@ -42,6 +47,13 @@ public class ConnectionHandlerGATTCallback extends BluetoothGattCallback {
             mainActivity.addTextToScreen("Disconnected from BLE");
             gatt.close(); // free resources
             connectionBLEHandler.freeBluetoothGatt();
+
+            if(!connected) {
+                // this should only happen when the connection fails not when it disconnects naturally
+                mainActivity.addTextToScreen("Bluetooth connection failed");
+                connectionBLEHandler.connectionFailed();
+            }
+            connected = false;
         }
 
     }

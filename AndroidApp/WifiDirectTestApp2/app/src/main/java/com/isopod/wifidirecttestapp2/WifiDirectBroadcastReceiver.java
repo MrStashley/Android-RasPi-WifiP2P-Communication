@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 
 import java.util.Collection;
@@ -15,6 +16,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     private WifiP2pManager.Channel channel;
     private MainActivity mainActivity;
     private WifiDirectConnector wifiDirectConnector;
+
+    private boolean connected = false;
 
     WifiP2pManager.PeerListListener peerListListener;
 
@@ -51,6 +54,14 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             }
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             // Respond to new connection or disconnections
+            WifiP2pInfo groupInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_INFO);
+            if(!connected && groupInfo != null && groupInfo.groupFormed) {
+                connected = true;
+                wifiDirectConnector.connectionMade();
+            }
+            else
+                connected = false;
+
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             // Respond to this device's wifi state changing
             // getting this action allows the broadcast receiver to tell the wifiDirectConnector what

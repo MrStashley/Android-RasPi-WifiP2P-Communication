@@ -5,7 +5,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
@@ -53,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
             }
-            String oldString = (String) deviceList.getText();
+            String oldString = "" + deviceList.getText();
             if(oldString == null)
                 oldString = "";
             deviceList.setText(oldString + curGroupString);
@@ -80,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private WifiP2pManager.Channel mChannel;
     private IntentFilter intentFilter;
     private WifiDirectBroadcastReceiver wifiDirectBroadcastReceiver;
-    private boolean inProgress;
+    private boolean inProgress, connected = false;
     private TextView deviceList;
     private WifiDirectConnector wifiDirectConnector;
     private Handler handler = new Handler();
@@ -91,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        deviceList = findViewById(R.id.devicelist);
+        deviceList = (TextView)findViewById(R.id.devicelist);
+        deviceList.setMovementMethod( new ScrollingMovementMethod());
         context = getApplicationContext();
         wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         wifiP2pManager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
@@ -99,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         mChannel = wifiP2pManager.initialize(context, Looper.getMainLooper(), null);
 
         wifiDirectConnector = new WifiDirectConnector(this);
-        wifiDirectConnector.discover();
     }
 
     public void setBroadcastReceiver(WifiDirectBroadcastReceiver wifiDirectBroadcastReceiver, IntentFilter intentFilter){
@@ -115,8 +118,8 @@ public class MainActivity extends AppCompatActivity {
     /* unregister the broadcast receiver */
     @Override
     protected void onPause() {
-        super.onPause();
         unregisterReceiver(wifiDirectBroadcastReceiver);
+        super.onPause();
     }
 
     public void SearchButtonPressed(View view){
@@ -154,13 +157,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void wifiDirectConnected(){
-        final MainActivity mainActivity = this;
+        /*final MainActivity mainActivity = this;
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 wifiP2pManager.requestConnectionInfo(mChannel, new WifiDirectConnListener(mainActivity));
             }
-        }, 10000);
+        }, 10000);*/
+
+        if(connected)
+            return;
+
+        addTextToScreen("Wifi direct connected in main activity");
+
+        wifiP2pManager.requestConnectionInfo(mChannel, new WifiDirectConnListener(this));
+
+        connected = true;
+    }
+
+    public void disconnectButtonPressed(View view){
+        if(!connected)
+            return;
+
+        connected = false;
+        wifiDirectConnector.disconnect();
+        wifiDirectConnector = new WifiDirectConnector(this);
+    }
+
+    public void wifiDirectFailed(){
+        clearTextOnScreen();
+        addTextToScreen("Wifi direct connection failed. Try again");
+
+        /* restart app programatically
+        Intent mStartActivity = new Intent(MainActivity.this, MainActivity.class);
+        int mPendingIntentId = 123456;
+        PendingIntent mPendingIntent = PendingIntent.getActivity(MainActivity.this, mPendingIntentId, mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager mgr = (AlarmManager)MainActivity.this.getSystemService(Context.ALARM_SERVICE);
+        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+        System.exit(0); */
+
     }
 
     public static String showMessage(String message, Context curContext){
@@ -181,10 +216,17 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
-        String oldString = (String) deviceList.getText();
+        String oldString = "" + deviceList.getText();
         if(oldString == null)
             oldString = "";
         deviceList.setText(oldString + messageToAdd + "\n");
+    }
+
+    public void clearTextOnScreen(){
+        if(deviceList == null)
+            return;
+
+        deviceList.setText("");
     }
 
 }

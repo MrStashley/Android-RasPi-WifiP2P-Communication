@@ -1,4 +1,5 @@
 import serial, os, sys, threading;
+from wifi_direct_socket import WifiDirectSocket
 
 BLE_INIT_FAILED = ord("0");
 BLE_INIT_SUCCESS = ord("1");
@@ -6,9 +7,13 @@ CENTRAL_CONNECTED = ord("2");
 DEVICE_NAME = ord("3");
 START_CONNECT = ord("4");
 CENTRAL_DISCONNECTED = ord("5");
+DISCONNECT_WFD = ord("7");
+START_SOCKET = ord("8");
+
 
 P2P_FIND_COMMAND = "wpa_cli -i p2p-dev-wlan0 p2p_find";
-GET_P2P_PEERS_COMMAND = "for i in $( wpa_cli -i p2p-dev-wlan0 p2p_peers ); do echo -n \"$i \n\"; wpa_cli -i p2p-dev-wlan0 p2p_peer $i | grep -E \"device_name=\"; done" 
+GET_P2P_PEERS_COMMAND = "for i in $( wpa_cli -i p2p-dev-wlan0 p2p_peers ); do echo -n \"$i \n\"; wpa_cli -i p2p-dev-wlan0 p2p_peer $i | grep -E \"device_name=\"; done";
+P2P_GROUP_REMOVE_COMMAND = "wpa_cli -ip2p-dev-wlan0 p2p_group_remove  $(ip -br link | grep -Po 'p2p-wlan0-\\d+')" ;
 
 def P2P_CONNECT_COMMAND(macd):
     #python macro B-). idk if this is a thing that is done in standard python style but idc i'm doin it
@@ -18,6 +23,7 @@ class WifiDirectConnector:
     
     def __init__(self):
         self.device_name = "";
+        self.connected = False;
         self.main();
 
     def main(self):
@@ -47,8 +53,22 @@ class WifiDirectConnector:
                         self.central_disconnected();
                     if(command_code == START_CONNECT):
                         self.start_connect();
+                    if(command_code == DISCONNECT_WFD):
+                        self.disconnect();
+                    if(command_code == START_SOCKET):
+                        self.wifi_direct_connected();
                         
                 print(data);
+
+
+    def disconnect(self):
+        self.connected = False;
+        print("disconnecting");
+
+        if (not self.p2p_group_remove()):
+            print("Disconnect failed");
+        else:
+            print("Disconnected");
                 
     def start_connect(self):
         if(self.device_name == ""):
@@ -66,10 +86,13 @@ class WifiDirectConnector:
 
         if(self.p2p_connect(macd)):
             print("successfully connected to " + str(self.device_name));
+            self.connected = True;
+            
         else:
             print("Connection failed. Something went wrong");
 
     def central_connected(self):
+        self.connected = False;
         if(not self.p2p_find()):
             print("p2p_find failed. stopping");
             return;
@@ -124,6 +147,22 @@ class WifiDirectConnector:
             to_return = True;
 
         return to_return;
+
+    def p2p_group_remove(self):
+        to_return = False;
+
+        p2p_group_remove_file = os.popen(P2P_GROUP_REMOVE_COMMAND, "r");
+        cmd_output = p2p_group_remove_file.readline();
+
+        if(cmd_output == "OK\n"):
+            to_return = True;
+
+        return to_return;
+
+    def wifi_direct_connected(self):
+        self.socket = WifiDirectSocket();
+        self.socket.create_socket();
+        self.socket.accept();
   
 if __name__ == "__main__":
     wifi_direct_conn = WifiDirectConnector();

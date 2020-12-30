@@ -182,13 +182,25 @@ public class ConnectionBLEHandler {
     // sends a truthy value to the start_connect BLE characteristic to tell the peripheral to connect
     // over wifi direct
     public void startConnect(){
-        byte[] to_send = {1}; // one byte that is nonzero
+        byte[] to_send = {BTLECommands.START_CONNECT}; // one byte that is nonzero
         startConnectChar.setValue(to_send);
         boolean writeStatus = bluetoothGatt.writeCharacteristic(startConnectChar);
         mainActivity.addTextToScreen("Starting connect success: " + writeStatus);
 
-        // unresolved bug here: the second characteristic written seems to always fail.
-        // I am going to try adding some delay
+    }
+
+    public void sendDisconnectWfd(){
+        byte[] to_send = {BTLECommands.DISCONNECT_WFD}; // one byte that is nonzero
+        startConnectChar.setValue(to_send);
+        boolean writeStatus = bluetoothGatt.writeCharacteristic(startConnectChar);
+        mainActivity.addTextToScreen("Sending disconnect success" + writeStatus);
+    }
+
+    public void startSocket(){
+        byte[] to_send = {BTLECommands.START_SOCKET}; // one byte that is nonzero
+        startConnectChar.setValue(to_send);
+        boolean writeStatus = bluetoothGatt.writeCharacteristic(startConnectChar);
+        mainActivity.addTextToScreen("Sending start socket success" + writeStatus);
     }
 
     public void disconnect(){
@@ -211,6 +223,10 @@ public class ConnectionBLEHandler {
     public void checkConnection(){
         // passes the message from the ConnectionHandlerGATTCallback to the WifiDirectConnector
         wifiDirectConnector.checkConnection();
+    }
+
+    public void connectionFailed(){
+        wifiDirectConnector.connectionFailed();
     }
 
 }

@@ -7,9 +7,34 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pGroup;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Handler;
+
+class WifiDirectConnListener2 implements WifiP2pManager.ConnectionInfoListener {
+    private MainActivity curActivity;
+    private WifiDirectConnector wifiDirectConnector;
+
+    public WifiDirectConnListener2(MainActivity curActivity, WifiDirectConnector wifiDirectConnector){
+        this.curActivity = curActivity;
+        this.wifiDirectConnector = wifiDirectConnector;
+    }
+
+    @Override
+    public void onConnectionInfoAvailable(WifiP2pInfo info) {
+        if(!info.groupFormed){
+            wifiDirectConnector.connectionFailed();
+        }
+    }
+
+}
+
 
 public class WifiDirectConnector {
+    public final static int TIMEOUT_MILLIS = 60000;
+
+
     private String localDeviceName;
     private String peripheralDeviceName;
     private MainActivity mainActivity;
@@ -58,10 +83,6 @@ public class WifiDirectConnector {
     public String getPeripheralDeviceName(){
         // gives the peripheral device name to the broadcast receiver
         return peripheralDeviceName;
-    }
-
-    public void discover(){
-        // wifi direct P2P_FIND
     }
 
     public void startConnection(String deviceName){
@@ -124,6 +145,7 @@ public class WifiDirectConnector {
             @Override
             public void onFailure(int reason) {
                 mainActivity.addTextToScreen("Wifi direct connection failure");
+                connectionFailed();
             }
         });
     }
@@ -133,15 +155,71 @@ public class WifiDirectConnector {
         connectionBLEHandler.startConnect();
     }
 
-    public void checkConnection(){
-        // check if connected
-        // if connected:
+    public void connectionFailed(){
         connectionBLEHandler.disconnect();
-        mainActivity.wifiDirectConnected();
-        // else:
-        // do some error handling, try to figure out what went wrong
-        // maybe mainActivity.wifiDirectFailed();
+        mainActivity.wifiDirectFailed();
+    }
 
+    public void checkConnection() {
+        // The only way we can really be sure of a connection fail is if there is a timeout
+        // The connection process can take quite a bit, so there needs to be a long time out
+
+        final WifiDirectConnector wifiDirectConnector = this;
+        mainActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        wifiP2pManager.requestConnectionInfo(channel, new WifiDirectConnListener2(mainActivity, wifiDirectConnector));
+                    }
+                }, TIMEOUT_MILLIS);
+            }
+        });
+
+
+
+    }
+
+    public void connectionMade(){
+        // connection success
+
+        //connectionBLEHandler.disconnect();
+        connectionBLEHandler.startSocket();
+        mainActivity.addTextToScreen("Wifi direct connection success!");
+        mainActivity.wifiDirectConnected();
+    }
+
+    public void disconnect(){
+        connectionBLEHandler.sendDisconnectWfd();
+        connectionBLEHandler.disconnect();
+        removeGroup();
+
+    }
+
+    public void removeGroup() {
+        if (wifiP2pManager != null && channel != null) {
+            wifiP2pManager.requestGroupInfo(channel, new WifiP2pManager.GroupInfoListener() {
+                @Override
+                public void onGroupInfoAvailable(WifiP2pGroup group) {
+                    if (group != null && wifiP2pManager != null && channel != null) {
+                        wifiP2pManager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+
+                            @Override
+                            public void onSuccess() {
+                                mainActivity.addTextToScreen("Successfully removed group");
+                            }
+
+                            @Override
+                            public void onFailure(int reason) {
+                               mainActivity.addTextToScreen("removeGroup onFailure -" + reason);
+                            }
+                        });
+                    }
+                }
+            });
+        }
     }
 
 
